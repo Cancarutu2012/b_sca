@@ -185,7 +185,7 @@
         const content = name + "\n";
         const base64Content = btoa(content); // Base64 kódolás
 
-        fetch('https://api.github.com/repos/Cancarutu2012/b_gen/contents/users/names.csv', {
+        fetch('https://api.github.com/repos/Cancarutu2012/b_gen/contents/names.csv', {
             method: 'PUT',
             headers: {
                 'Authorization': 'Bearer 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',
@@ -193,7 +193,7 @@
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                message: 'Add new name to names.csv',
+                message: 'Add new name to names.csv again.',
                 content: base64Content,
                 sha: '' // Ha fájl már létezik, itt adjuk meg a fájl SHA értékét
             })
@@ -214,3 +214,4 @@
 
 </body>
 </html>
+
