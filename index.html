@@ -7,6 +7,7 @@
     
     <!-- QuaggaJS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
 
     <style>
         body {
@@ -54,6 +55,21 @@
             color: #333;
             margin-bottom: 20px;
         }
+
+        #submitBtn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        #submitBtn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -66,8 +82,10 @@
 <div id="output"></div>
 <div id="status"></div>
 
+<button id="submitBtn" disabled>Beküldés</button>
+
 <script>
-    let names = [];
+    let names = JSON.parse(localStorage.getItem('names')) || [];
 
     // Kamera elindítása a QuaggaJS segítségével
     function startCamera() {
@@ -119,10 +137,10 @@
             if (name && !names.includes(name)) {
                 names.push(name);
 
-                // Az olvasott nevet feltöltjük GitHub-ra
-                uploadToGitHub(name);
+                // Tároljuk a neveket localStorage-ban vagy cookie-ban
+                localStorage.setItem('names', JSON.stringify(names));
 
-                // Kamera és cím eltüntetése
+                // Az olvasott nevet megjelenítjük
                 document.querySelector('#qr-reader').style.display = "none";
                 document.querySelector('#title').style.display = "none";
 
@@ -180,39 +198,34 @@
         startCamera();
     };
 
-    // Feltöltés a GitHub-ra
-    function uploadToGitHub(name) {
-        const content = name + "\n";
-        const base64Content = btoa(content); // Base64 kódolás
+    // Beküldés gomb funkció
+    document.getElementById('submitBtn').addEventListener('click', () => {
+        // Küldés EmailJS-en keresztül
+        const namesList = names.join('\n');
+        emailJSsend(namesList);
+    });
 
-        fetch('https://api.github.com/repos/Cancarutu2012/b_gen/contents/users/names.csv', {
-            method: 'PUT',
-            headers: {
-                'Authorization': 'Bearer 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',
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: 'Add new name to names.csv again.',
-                content: base64Content,
-                sha: 'd8715da9f10a5f9cbde4d7732db5cb4c3b127e95' // Ha fájl már létezik, itt adjuk meg a fájl SHA értékét
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.content) {
-                console.log('Feltöltés sikeres:', data);
-            } else {
-                console.error('Hiba a feltöltés során:', data);
-            }
-        })
-        .catch(error => {
-            console.error('Feltöltési hiba:', error);
-        });
+    // EmailJS küldés
+    function emailJSsend(namesList) {
+        emailjs.init("user_MyUserID");  // Cseréld ki a saját userID-dal
+
+        const templateParams = {
+            to_email: 'example@example.com', // A címzett email címe
+            subject: 'Becsekkolt Nevek Lista',
+            message: namesList
+        };
+
+        emailjs.send('service_xxx', 'template_xxx', templateParams)
+            .then((response) => {
+                console.log('Sikeres email küldés:', response);
+                alert("Az email sikeresen elküldve!");
+            }, (error) => {
+                console.error('Hiba az email küldésében:', error);
+                alert("Hiba történt az email küldésekor.");
+            });
     }
+
 </script>
 
 </body>
 </html>
-
-
