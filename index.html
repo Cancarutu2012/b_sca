@@ -121,7 +121,7 @@ function sendEmail() {
     const emailSubject = "Beolvasott Nevek";
     const emailBody = `A következő neveket olvastuk be:\n\n${tableContent.join("; ")}`; // Neveket pontosvesszővel elválasztva egy sorban
 
-    window.location.href = `mailto:radetzkymate@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    window.location.href = `mailto:info@radetzky.hu?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
 }
 
 
@@ -165,6 +165,7 @@ startScanner();
 
 </body>
 </html>
+
 
 
 
