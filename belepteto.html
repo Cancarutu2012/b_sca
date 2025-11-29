@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vonalkód Olvasó - QuaggaJS</title>
+    
+    <!-- QuaggaJS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            overflow: hidden;
+        }
+
+        #qr-reader {
+            width: 100%;
+            max-width: 500px;
+            height: 300px;
+            margin-bottom: 20px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            background-color: #000;
+        }
+
+        #output {
+            font-size: 40px;
+            font-weight: bold;
+            color: green;
+            display: none; /* Kezdetben rejtve */
+            opacity: 0; /* Kezdeti opacitás 0 */
+            transition: opacity 2s ease-in-out; /* Fade-in animáció */
+        }
+
+        #status {
+            font-size: 40px;
+            color: green;
+            display: none; /* Kezdetben rejtve */
+            opacity: 0; /* Kezdeti opacitás 0 */
+            transition: opacity 2s ease-in-out; /* Fade-in animáció */
+        }
+
+        #title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h2 id="title">Vonalkód Olvasó</h2>
+
+<!-- Kamera beolvasás megjelenítése -->
+<video id="qr-reader" autoplay></video>
+<canvas id="canvas" style="display:none;"></canvas>
+<div id="output"></div>
+<div id="status"></div>
+
+<script>
+    // Kamera elindítása a QuaggaJS segítségével
+    function startCamera() {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+                .then(function(stream) {
+                    // A videó streamet hozzárendeljük a video elemhez
+                    const videoElement = document.getElementById('qr-reader');
+                    videoElement.srcObject = stream;
+
+                    // QuaggaJS beállítása
+                    startQuagga();
+                })
+                .catch(function(err) {
+                    console.error("A kamera nem érhető el:", err);
+                    alert("Nem sikerült elindítani a kamerát. Kérjük, engedélyezd a kamerát a böngészőben.");
+                });
+        } else {
+            alert("A böngésző nem támogatja a kamera elérését.");
+        }
+    }
+
+    // QuaggaJS inicializálása és beolvasás
+    function startQuagga() {
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#qr-reader'),
+                constraints: {
+                    facingMode: "user"
+                }
+            },
+            decoder: {
+                readers: ["code_128_reader"] // Itt állíthatod be a megfelelő vonalkód típust
+            },
+            locate: true
+        }, function(err) {
+            if (err) {
+                console.error(err);
+                alert("Hiba történt a Quagga inicializálása közben.");
+                return;
+            }
+            Quagga.start();
+        });
+
+        // Eredmények feldolgozása
+        Quagga.onDetected(function(result) {
+            const decodedText = result.codeResult.code;
+            const name = decodeNameFromCode(decodedText);
+
+            if (name) {
+                // Kamera és cím eltüntetése
+                document.querySelector('#qr-reader').style.display = "none";
+                document.querySelector('#title').style.display = "none";
+
+                // Eredmények megjelenítése
+                const outputElement = document.getElementById('output');
+                const statusElement = document.getElementById('status');
+                outputElement.textContent = name;
+                statusElement.textContent = "MEHETSZ";
+
+                // Fade-in animáció
+                setTimeout(() => {
+                    outputElement.style.display = "block";
+                    statusElement.style.display = "block";
+                    outputElement.style.opacity = 1;
+                    statusElement.style.opacity = 1;
+                }, 500);
+            }
+        });
+    }
+
+    // Név dekódolása a vonalkódból
+    function decodeNameFromCode(code) {
+        const map = {};
+        let i = 1;
+        for (let c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) map[String.fromCharCode(c)] = i++;
+        for (let c = "a".charCodeAt(0); c <= "z".charCodeAt(0); c++) map[String.fromCharCode(c)] = i++;
+        map[" "] = 0;
+        map["-"] = 53;
+
+        let name = "";
+        for (let i = 0; i < code.length; i += 2) {
+            const num = parseInt(code.substring(i, i + 2), 10);
+            for (const key in map) {
+                if (map[key] === num) {
+                    name += key;
+                    break;
+                }
+            }
+        }
+        return name;
+    }
+
+    // Kamera elindítása az oldal betöltődésekor
+    window.onload = () => {
+        startCamera();
+    };
+</script>
+
+</body>
+</html>
