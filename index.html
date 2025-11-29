@@ -107,8 +107,6 @@
 
     // QuaggaJS inicializálása és beolvasás
     function startQuagga() {
-        console.log("QuaggaJS elindult...");
-
         Quagga.init({
             inputStream: {
                 name: "Live",
@@ -124,11 +122,10 @@
             locate: true
         }, function(err) {
             if (err) {
-                console.error("Quagga inicializálás hiba:", err);
+                console.error(err);
                 alert("Hiba történt a Quagga inicializálása közben.");
                 return;
             }
-            console.log("Quagga sikeresen elindult");
             Quagga.start();
         });
 
@@ -142,9 +139,6 @@
 
                 // Tároljuk a neveket localStorage-ban vagy cookie-ban
                 localStorage.setItem('names', JSON.stringify(names));
-
-                // Aktiváljuk a Beküldés gombot, ha új név van
-                document.getElementById('submitBtn').disabled = false;
 
                 // Az olvasott nevet megjelenítjük
                 document.querySelector('#qr-reader').style.display = "none";
@@ -213,11 +207,11 @@
 
     // EmailJS küldés
     function emailJSsend(namesList) {
-        emailjs.init("YUg6DWfUVgkhC_TpW");  // Cseréld ki a saját userID-dal
+        emailjs.init("user_MyUserID");  // Cseréld ki a saját userID-dal
 
         const templateParams = {
-            to_email: 'info@radetzky.hu', // A címzett email címe
-            subject: 'Táblázat - NEVEK',
+            to_email: 'example@example.com', // A címzett email címe
+            subject: 'Becsekkolt Nevek Lista',
             message: namesList
         };
 
@@ -230,6 +224,7 @@
                 alert("Hiba történt az email küldésekor.");
             });
     }
+
 </script>
 
 </body>
