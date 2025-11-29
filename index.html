@@ -77,7 +77,7 @@ function decodeName(code) {
 // ------------------- QR kód dekódolása -------------------
 let scanner;
 let nameList = [];
-let isScanning = false;
+let isScanning = true; // Felvesszük a szkennelés állapotát
 let deviceId = localStorage.getItem('deviceId'); // Tároljuk el a kiválasztott kamera ID-ját
 
 function decodeMessage(decodedText) {
@@ -127,22 +127,22 @@ function sendEmail() {
 // ------------------- QR kód olvasó beállítása -------------------
 function onScanSuccess(decodedText, decodedResult) {
     if (isScanning) {
-        isScanning = false;
-        // Nem állítjuk le a kamerát, hanem folytatjuk a beolvasást
+        isScanning = false;  // Miután beolvasunk, egy időre megállítjuk a szkennelést
         decodeMessage(decodedText);
+        setTimeout(() => {
+            isScanning = true;  // Újra engedélyezzük a szkennelést 2 másodperc múlva
+        }, 2000);
     }
 }
 
 // Kiválasztott kamera tárolása és olvasó indítása
 function startScanner() {
-    isScanning = true;
-
     if (!deviceId) {
         // Ha még nincs kamerák ID-ja, kérjük a felhasználót, hogy válasszon
         Html5Qrcode.getCameras().then(devices => {
             if (devices && devices.length) {
                 // Első kamera kiválasztása (vagy felhasználó választása)
-                deviceId = devices[0].id; // Elmentjük az első kamera ID-ját (ezt is személyre szabhatjuk)
+                deviceId = devices[0].id; // Elmentjük az első kamera ID-ját
                 localStorage.setItem('deviceId', deviceId); // Tároljuk el a választott kamera ID-ját
                 scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250, deviceId: deviceId }, false);
                 scanner.render(onScanSuccess);
