@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vonalkód Olvasó</title>
+    <title>Vonalkód Olvasó és Dekóder</title>
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; max-width: 480px; margin: 30px auto; }
         #qr-reader { width: 100%; height: 300px; display: block; margin-bottom: 20px; }
@@ -18,7 +19,7 @@
 </head>
 <body>
 
-<h2>Vonalkód Olvasó</h2>
+<h2>Vonalkód Olvasó és Dekóder</h2>
 
 <div id="qr-reader"></div>
 
@@ -35,65 +36,91 @@
 <button id="sendButton" onclick="sendEmail()" style="display:none;">Küld</button>
 
 <script>
-    let scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
-    let nameList = [];
-    let isScanning = false;
+// ------------------- Numerikus mapping -------------------
+function decodeName(code) {
+    const map = {};
+    let i = 1;
+    for (let c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) map[i++] = String.fromCharCode(c);
+    for (let c = "a".charCodeAt(0); c <= "z".charCodeAt(0); c++) map[i++] = String.fromCharCode(c);
+    map[0] = " ";
+    map[53] = "-";
 
-    // Beolvasott üzenet dekódolása
-    function decodeMessage(decodedText) {
-        const name = decodedText.trim();
-        if (name) {
-            // Nevet zöld színnel megjeleníteni
-            const nameDisplay = document.getElementById("nameDisplay");
-            nameDisplay.textContent = name;
-            nameDisplay.style.display = "block";
-            document.getElementById("message").style.display = "block";
-            
-            // Hozzáadjuk a táblázathoz
-            const tableBody = document.getElementById("nameList");
-            const newRow = document.createElement("tr");
-            const newCell = document.createElement("td");
-            newCell.textContent = name;
-            newRow.appendChild(newCell);
-            tableBody.appendChild(newRow);
-
-            // Megjeleníti a táblázatot és a Küld gombot
-            document.getElementById("nameTable").style.display = "block";
-            document.getElementById("sendButton").style.display = "inline-block";
+    let name = "";
+    for (let i = 0; i < code.length; i += 2) {
+        const num = parseInt(code.substring(i, i + 2), 10);
+        if (map[num]) {
+            name += map[num];
+        } else {
+            name += "?"; // Ha nem található karakter
         }
     }
+    return name;
+}
 
-    // Email küldése
-    function sendEmail() {
-        const tableContent = [];
-        const rows = document.getElementById("nameList").getElementsByTagName("tr");
-        for (let row of rows) {
-            tableContent.push(row.innerText);
-        }
+// ------------------- QR kód dekódolása -------------------
+let scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+let nameList = [];
+let isScanning = false;
 
-        const emailSubject = "Beolvasott Nevek";
-        const emailBody = `A következő neveket olvastuk be:\n\n${tableContent.join("\n")}`;
+function decodeMessage(decodedText) {
+    // A vonalkód dekódolása
+    const decodedName = decodeName(decodedText.trim());
+    if (decodedName) {
+        // Nevet zöld színnel megjeleníteni
+        const nameDisplay = document.getElementById("nameDisplay");
+        nameDisplay.textContent = decodedName;
+        nameDisplay.style.display = "block";
+        document.getElementById("message").style.display = "block";
+        
+        // Hozzáadjuk a táblázathoz
+        const tableBody = document.getElementById("nameList");
+        const newRow = document.createElement("tr");
+        const newCell = document.createElement("td");
+        newCell.textContent = decodedName;
+        newRow.appendChild(newCell);
+        tableBody.appendChild(newRow);
 
-        window.location.href = `mailto:radetzkymate@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+        // Megjeleníti a táblázatot és a Küld gombot
+        document.getElementById("nameTable").style.display = "block";
+        document.getElementById("sendButton").style.display = "inline-block";
+
+        // 2 másodperc múlva újraindítja a kamerát
+        setTimeout(startScanner, 2000);
+    }
+}
+
+// ------------------- E-mail küldés -------------------
+function sendEmail() {
+    const tableContent = [];
+    const rows = document.getElementById("nameList").getElementsByTagName("tr");
+    for (let row of rows) {
+        tableContent.push(row.innerText);
     }
 
-    // QR kód olvasása
-    function onScanSuccess(decodedText, decodedResult) {
-        if (isScanning) {
-            isScanning = false;
-            scanner.clear();
-            decodeMessage(decodedText);
-        }
-    }
+    const emailSubject = "Beolvasott Nevek";
+    const emailBody = `A következő neveket olvastuk be:\n\n${tableContent.join("\n")}`;
 
-    // QR kód olvasó beállítása
-    function startScanner() {
-        isScanning = true;
-        scanner.render(onScanSuccess);
-    }
+    window.location.href = `mailto:radetzkymate@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+}
 
-    // QR olvasó indítása
-    startScanner();
+// ------------------- QR kód olvasó beállítása -------------------
+function onScanSuccess(decodedText, decodedResult) {
+    if (isScanning) {
+        isScanning = false;
+        scanner.clear();
+        decodeMessage(decodedText);
+    }
+}
+
+// QR kód olvasó indítása
+function startScanner() {
+    isScanning = true;
+    scanner.render(onScanSuccess);
+}
+
+// QR olvasó indítása
+startScanner();
+
 </script>
 
 </body>
