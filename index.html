@@ -115,14 +115,15 @@ function sendEmail() {
     const tableContent = [];
     const rows = document.getElementById("nameList").getElementsByTagName("tr");
     for (let row of rows) {
-        tableContent.push(row.innerText);
+        tableContent.push(row.innerText); // Soronként hozzáadjuk a neveket
     }
 
     const emailSubject = "Beolvasott Nevek";
-    const emailBody = `A következő neveket olvastuk be:\n\n${tableContent.join("\n")}`;
+    const emailBody = `A következő neveket olvastuk be:\n\n${tableContent.join("\n")}`; // Soronként jelenítjük meg a neveket
 
     window.location.href = `mailto:radetzkymate@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
 }
+
 
 // ------------------- QR kód olvasó beállítása -------------------
 function onScanSuccess(decodedText, decodedResult) {
@@ -164,3 +165,4 @@ startScanner();
 
 </body>
 </html>
+
