@@ -61,6 +61,7 @@ function decodeName(code) {
 let scanner;
 let nameList = [];
 let isScanning = false;
+let deviceId = null; // A kiválasztott kamera ID-ja
 
 function decodeMessage(decodedText) {
     // A vonalkód dekódolása
@@ -112,11 +113,27 @@ function onScanSuccess(decodedText, decodedResult) {
     }
 }
 
-// QR kód olvasó indítása
+// Kiválasztott kamera tárolása és olvasó indítása
 function startScanner() {
     isScanning = true;
-    scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250, facingMode: "environment" }, false);
-    scanner.render(onScanSuccess);
+
+    if (!deviceId) {
+        // Ha még nincs kamerák ID-ja, kérjük a felhasználót, hogy válasszon
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                // Első kamera kiválasztása (vagy felhasználó választása)
+                deviceId = devices[0].id; // Elmentjük az első kamera ID-ját (ezt is személyre szabhatjuk)
+                scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250, deviceId: deviceId }, false);
+                scanner.render(onScanSuccess);
+            }
+        }).catch(err => {
+            console.error("Hiba történt a kamera lekérdezésekor:", err);
+        });
+    } else {
+        // Ha már van eszköz ID, akkor azt használjuk
+        scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250, deviceId: deviceId }, false);
+        scanner.render(onScanSuccess);
+    }
 }
 
 // QR olvasó indítása
