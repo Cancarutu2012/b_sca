@@ -3,228 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vonalkód Olvasó - QuaggaJS</title>
-    
-    <!-- QuaggaJS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
-    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
-
+    <title>Vonalkód Olvasó</title>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0;
-            overflow: hidden;
-        }
-
-        #qr-reader {
-            width: 100%;
-            max-width: 500px;
-            height: 300px;
-            margin-bottom: 20px;
-            border: 2px solid #ccc;
-            border-radius: 10px;
-            background-color: #000;
-        }
-
-        #output {
-            font-size: 40px;
-            font-weight: bold;
-            color: green;
-            display: none;
-            opacity: 0;
-            transition: opacity 2s ease-in-out;
-        }
-
-        #status {
-            font-size: 40px;
-            color: green;
-            display: none;
-            opacity: 0;
-            transition: opacity 2s ease-in-out;
-        }
-
-        #title {
-            font-size: 20px;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        #submitBtn {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            font-size: 16px;
-            border: none;
-            cursor: pointer;
-        }
-
-        #submitBtn:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; max-width: 480px; margin: 30px auto; }
+        #qr-reader { width: 100%; height: 300px; display: block; margin-bottom: 20px; }
+        #nameDisplay { font-size: 40px; color: green; font-weight: bold; }
+        #message { font-weight: bold; font-size: 18px; margin-top: 10px; }
+        #nameTable { margin-top: 20px; width: 100%; border-collapse: collapse; }
+        #nameTable th, td { border: 1px solid black; padding: 10px; text-align: center; }
+        #sendButton { margin-top: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #4CAF50; color: white; border: none; }
+        #sendButton:disabled { background-color: #ccc; }
     </style>
 </head>
 <body>
 
-    <h2 id="title">Vonalkód Olvasó</h2>
+<h2>Vonalkód Olvasó</h2>
 
-    <!-- Kamera beolvasás megjelenítése -->
-    <video id="qr-reader" autoplay></video>
-    <canvas id="canvas" style="display:none;"></canvas>
-    <div id="output"></div>
-    <div id="status"></div>
+<div id="qr-reader"></div>
 
-    <button id="submitBtn" disabled>Beküldés</button>
+<div id="nameDisplay" style="display:none;"></div>
+<div id="message" style="display:none;">MEHETSZ</div>
 
-    <script>
-        let names = JSON.parse(localStorage.getItem('names')) || [];
+<table id="nameTable" style="display:none;">
+    <thead>
+        <tr><th>Beolvasott Nevek</th></tr>
+    </thead>
+    <tbody id="nameList"></tbody>
+</table>
 
-        // Kamera elindítása a QuaggaJS segítségével
-        function startCamera() {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-                    .then(function(stream) {
-                        const videoElement = document.getElementById('qr-reader');
-                        videoElement.srcObject = stream;
-                        startQuagga();
-                    })
-                    .catch(function(err) {
-                        console.error("A kamera nem érhető el:", err);
-                        alert("Nem sikerült elindítani a kamerát. Kérjük, engedélyezd a kamerát a böngészőben.");
-                    });
-            } else {
-                alert("A böngésző nem támogatja a kamera elérését.");
-            }
+<button id="sendButton" onclick="sendEmail()" style="display:none;">Küld</button>
+
+<script>
+    let scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+    let nameList = [];
+    let isScanning = false;
+
+    // Beolvasott üzenet dekódolása
+    function decodeMessage(decodedText) {
+        const name = decodedText.trim();
+        if (name) {
+            // Nevet zöld színnel megjeleníteni
+            const nameDisplay = document.getElementById("nameDisplay");
+            nameDisplay.textContent = name;
+            nameDisplay.style.display = "block";
+            document.getElementById("message").style.display = "block";
+            
+            // Hozzáadjuk a táblázathoz
+            const tableBody = document.getElementById("nameList");
+            const newRow = document.createElement("tr");
+            const newCell = document.createElement("td");
+            newCell.textContent = name;
+            newRow.appendChild(newCell);
+            tableBody.appendChild(newRow);
+
+            // Megjeleníti a táblázatot és a Küld gombot
+            document.getElementById("nameTable").style.display = "block";
+            document.getElementById("sendButton").style.display = "inline-block";
+        }
+    }
+
+    // Email küldése
+    function sendEmail() {
+        const tableContent = [];
+        const rows = document.getElementById("nameList").getElementsByTagName("tr");
+        for (let row of rows) {
+            tableContent.push(row.innerText);
         }
 
-        // QuaggaJS inicializálása és beolvasás
-        function startQuagga() {
-            Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    target: document.querySelector('#qr-reader'),
-                    constraints: {
-                        facingMode: "user"
-                    }
-                },
-                decoder: {
-                    readers: ["code_128_reader"] // Itt állíthatod be a megfelelő vonalkód típust
-                },
-                locate: true
-            }, function(err) {
-                if (err) {
-                    console.error(err);
-                    alert("Hiba történt a Quagga inicializálása közben.");
-                    return;
-                }
-                Quagga.start();
-            });
+        const emailSubject = "Beolvasott Nevek";
+        const emailBody = `A következő neveket olvastuk be:\n\n${tableContent.join("\n")}`;
 
-            // Eredmények feldolgozása
-            Quagga.onDetected(function(result) {
-                const decodedText = result.codeResult.code;
-                const name = decodeNameFromCode(decodedText);
+        window.location.href = `mailto:radetzkymate@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    }
 
-                if (name && !names.includes(name)) {
-                    names.push(name);
-
-                    // Tároljuk a neveket localStorage-ban vagy cookie-ban
-                    localStorage.setItem('names', JSON.stringify(names));
-
-                    // Az olvasott nevet megjelenítjük
-                    document.querySelector('#qr-reader').style.display = "none";
-                    document.querySelector('#title').style.display = "none";
-
-                    // Eredmények megjelenítése
-                    const outputElement = document.getElementById('output');
-                    const statusElement = document.getElementById('status');
-                    outputElement.textContent = name;
-                    statusElement.textContent = "MEHETSZ";
-
-                    // Fade-in animáció
-                    setTimeout(() => {
-                        outputElement.style.display = "block";
-                        statusElement.style.display = "block";
-                        outputElement.style.opacity = 1;
-                        statusElement.style.opacity = 1;
-                    }, 500);
-
-                    // 2 másodperc múlva újra megjelenik a kamera, és eltűnik a szöveg
-                    setTimeout(() => {
-                        outputElement.style.display = "none";
-                        statusElement.style.display = "none";
-                        document.querySelector('#qr-reader').style.display = "block";
-                        document.querySelector('#title').style.display = "block";
-                        // Újraindítjuk a Quagga-t a következő beolvasásra
-                        Quagga.start();
-                    }, 2000); // 2 másodperc várakozás
-                }
-            });
+    // QR kód olvasása
+    function onScanSuccess(decodedText, decodedResult) {
+        if (isScanning) {
+            isScanning = false;
+            scanner.clear();
+            decodeMessage(decodedText);
         }
+    }
 
-        // Név dekódolása a vonalkódból
-        function decodeNameFromCode(code) {
-            const map = {};
-            let i = 1;
-            for (let c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) map[String.fromCharCode(c)] = i++;
-            for (let c = "a".charCodeAt(0); c <= "z".charCodeAt(0); c++) map[String.fromCharCode(c)] = i++;
-            map[" "] = 0;
-            map["-"] = 53;
+    // QR kód olvasó beállítása
+    function startScanner() {
+        isScanning = true;
+        scanner.render(onScanSuccess);
+    }
 
-            let name = "";
-            for (let i = 0; i < code.length; i += 2) {
-                const num = parseInt(code.substring(i, i + 2), 10);
-                for (const key in map) {
-                    if (map[key] === num) {
-                        name += key;
-                        break;
-                    }
-                }
-            }
-            return name;
-        }
-
-        // Kamera elindítása az oldal betöltődésekor
-        window.onload = () => {
-            startCamera();
-        };
-
-        // Beküldés gomb funkció
-        document.getElementById('submitBtn').addEventListener('click', () => {
-            // Küldés EmailJS-en keresztül
-            const namesList = names.join('\n');
-            emailJSsend(namesList);
-        });
-
-        // EmailJS küldés
-        function emailJSsend(namesList) {
-            emailjs.init("YUg6DWfUVgkhC_TpW");  // Cseréld ki a saját userID-dal
-
-            const templateParams = {
-                to_email: 'info@radetzky.hu', // A címzett email címe
-                subject: 'Táblázat - NEVEK',
-                message: namesList
-            };
-
-            emailjs.send('service_xxx', 'template_xxx', templateParams)
-                .then((response) => {
-                    console.log('Sikeres email küldés:', response);
-                    alert("Az email sikeresen elküldve!");
-                }, (error) => {
-                    console.error('Hiba az email küldésében:', error);
-                    alert("Hiba történt az email küldésekor.");
-                });
-        }
-    </script>
+    // QR olvasó indítása
+    startScanner();
+</script>
 
 </body>
 </html>
