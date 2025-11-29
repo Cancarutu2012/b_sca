@@ -36,17 +36,17 @@
             font-size: 40px;
             font-weight: bold;
             color: green;
-            display: none; /* Kezdetben rejtve */
-            opacity: 0; /* Kezdeti opacitás 0 */
-            transition: opacity 2s ease-in-out; /* Fade-in animáció */
+            display: none;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
         }
 
         #status {
             font-size: 40px;
             color: green;
-            display: none; /* Kezdetben rejtve */
-            opacity: 0; /* Kezdeti opacitás 0 */
-            transition: opacity 2s ease-in-out; /* Fade-in animáció */
+            display: none;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
         }
 
         #title {
@@ -67,16 +67,15 @@
 <div id="status"></div>
 
 <script>
+    let names = [];
+
     // Kamera elindítása a QuaggaJS segítségével
     function startCamera() {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
                 .then(function(stream) {
-                    // A videó streamet hozzárendeljük a video elemhez
                     const videoElement = document.getElementById('qr-reader');
                     videoElement.srcObject = stream;
-
-                    // QuaggaJS beállítása
                     startQuagga();
                 })
                 .catch(function(err) {
@@ -117,7 +116,12 @@
             const decodedText = result.codeResult.code;
             const name = decodeNameFromCode(decodedText);
 
-            if (name) {
+            if (name && !names.includes(name)) {
+                names.push(name);
+
+                // Az olvasott nevet feltöltjük GitHub-ra
+                uploadToGitHub(name);
+
                 // Kamera és cím eltüntetése
                 document.querySelector('#qr-reader').style.display = "none";
                 document.querySelector('#title').style.display = "none";
@@ -135,6 +139,16 @@
                     outputElement.style.opacity = 1;
                     statusElement.style.opacity = 1;
                 }, 500);
+
+                // 2 másodperc múlva újra megjelenik a kamera, és eltűnik a szöveg
+                setTimeout(() => {
+                    outputElement.style.display = "none";
+                    statusElement.style.display = "none";
+                    document.querySelector('#qr-reader').style.display = "block";
+                    document.querySelector('#title').style.display = "block";
+                    // Újraindítjuk a Quagga-t a következő beolvasásra
+                    Quagga.start();
+                }, 2000); // 2 másodperc várakozás
             }
         });
     }
@@ -165,6 +179,37 @@
     window.onload = () => {
         startCamera();
     };
+
+    // Feltöltés a GitHub-ra
+    function uploadToGitHub(name) {
+        const content = name + "\n";
+        const base64Content = btoa(content); // Base64 kódolás
+
+        fetch('https://api.github.com/repos/Cancarutu2012/b_gen/contents/users/names.csv', {
+            method: 'PUT',
+            headers: {
+                'Authorization': 'Bearer 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',
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: 'Add new name to names.csv',
+                content: base64Content,
+                sha: '' // Ha fájl már létezik, itt adjuk meg a fájl SHA értékét
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.content) {
+                console.log('Feltöltés sikeres:', data);
+            } else {
+                console.error('Hiba a feltöltés során:', data);
+            }
+        })
+        .catch(error => {
+            console.error('Feltöltési hiba:', error);
+        });
+    }
 </script>
 
 </body>
