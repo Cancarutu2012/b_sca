@@ -103,8 +103,10 @@ function decodeMessage(decodedText) {
         document.getElementById("nameTable").style.display = "block";
         document.getElementById("sendButton").style.display = "inline-block";
 
-        // 2 másodperc múlva újraindítja a kamerát
-        setTimeout(startScanner, 2000);
+        // Az overlay eltűnik 2 másodperc múlva, a kamera továbbra is működik
+        setTimeout(function() {
+            document.getElementById("overlay").style.display = "none";
+        }, 2000);
     }
 }
 
@@ -126,7 +128,7 @@ function sendEmail() {
 function onScanSuccess(decodedText, decodedResult) {
     if (isScanning) {
         isScanning = false;
-        scanner.clear();
+        // Nem állítjuk le a kamerát, hanem folytatjuk a beolvasást
         decodeMessage(decodedText);
     }
 }
