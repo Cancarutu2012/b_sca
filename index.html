@@ -61,7 +61,7 @@ function decodeName(code) {
 let scanner;
 let nameList = [];
 let isScanning = false;
-let deviceId = null; // A kiválasztott kamera ID-ja
+let deviceId = localStorage.getItem('deviceId'); // Tároljuk el a kiválasztott kamera ID-ját
 
 function decodeMessage(decodedText) {
     // A vonalkód dekódolása
@@ -123,6 +123,7 @@ function startScanner() {
             if (devices && devices.length) {
                 // Első kamera kiválasztása (vagy felhasználó választása)
                 deviceId = devices[0].id; // Elmentjük az első kamera ID-ját (ezt is személyre szabhatjuk)
+                localStorage.setItem('deviceId', deviceId); // Tároljuk el a választott kamera ID-ját
                 scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250, deviceId: deviceId }, false);
                 scanner.render(onScanSuccess);
             }
