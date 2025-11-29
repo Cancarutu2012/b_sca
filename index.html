@@ -115,11 +115,11 @@ function sendEmail() {
     const tableContent = [];
     const rows = document.getElementById("nameList").getElementsByTagName("tr");
     for (let row of rows) {
-        tableContent.push(row.innerText); // Soronként hozzáadjuk a neveket
+        tableContent.push(row.innerText.trim()); // Soronként hozzáadjuk a neveket
     }
 
     const emailSubject = "Beolvasott Nevek";
-    const emailBody = `A következő neveket olvastuk be:\n\n${tableContent.join("\n")}`; // Soronként jelenítjük meg a neveket
+    const emailBody = `A következő neveket olvastuk be:\n\n${tableContent.join("; ")}`; // Neveket pontosvesszővel elválasztva egy sorban
 
     window.location.href = `mailto:radetzkymate@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
 }
@@ -165,4 +165,5 @@ startScanner();
 
 </body>
 </html>
+
 
