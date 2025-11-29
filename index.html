@@ -140,6 +140,9 @@
                 // Tároljuk a neveket localStorage-ban vagy cookie-ban
                 localStorage.setItem('names', JSON.stringify(names));
 
+                // Aktiváljuk a Beküldés gombot, ha új név van
+                document.getElementById('submitBtn').disabled = false;
+
                 // Az olvasott nevet megjelenítjük
                 document.querySelector('#qr-reader').style.display = "none";
                 document.querySelector('#title').style.display = "none";
@@ -224,9 +227,7 @@
                 alert("Hiba történt az email küldésekor.");
             });
     }
-
 </script>
 
 </body>
 </html>
-
