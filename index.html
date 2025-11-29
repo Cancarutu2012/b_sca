@@ -7,14 +7,15 @@
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; max-width: 480px; margin: 30px auto; }
+        body { font-family: Arial, sans-serif; text-align: center; margin: 0; height: 100vh; display: flex; flex-direction: column; justify-content: space-between; }
         #qr-reader { width: 100%; height: 300px; display: block; margin-bottom: 20px; }
-        #nameDisplay { font-size: 40px; color: green; font-weight: bold; }
+        #nameDisplay { font-size: 40px; color: green; font-weight: bold; margin-top: 10px; }
         #message { font-weight: bold; font-size: 18px; margin-top: 10px; }
-        #nameTable { margin-top: 20px; width: 100%; border-collapse: collapse; }
+        #nameTable { margin-top: 20px; width: 100%; border-collapse: collapse; display: none; }
         #nameTable th, td { border: 1px solid black; padding: 10px; text-align: center; }
-        #sendButton { margin-top: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #4CAF50; color: white; border: none; }
+        #sendButton { margin-top: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #4CAF50; color: white; border: none; display: none; }
         #sendButton:disabled { background-color: #ccc; }
+        #bottomSection { margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -23,17 +24,19 @@
 
 <div id="qr-reader"></div>
 
-<div id="nameDisplay" style="display:none;"></div>
-<div id="message" style="display:none;">MEHETSZ</div>
+<div id="bottomSection">
+    <div id="nameDisplay" style="display:none;"></div>
+    <div id="message" style="display:none;">MEHETSZ</div>
 
-<table id="nameTable" style="display:none;">
-    <thead>
-        <tr><th>Beolvasott Nevek</th></tr>
-    </thead>
-    <tbody id="nameList"></tbody>
-</table>
+    <table id="nameTable">
+        <thead>
+            <tr><th>Beolvasott Nevek</th></tr>
+        </thead>
+        <tbody id="nameList"></tbody>
+    </table>
 
-<button id="sendButton" onclick="sendEmail()" style="display:none;">Küld</button>
+    <button id="sendButton" onclick="sendEmail()">Küld</button>
+</div>
 
 <script>
 // ------------------- Numerikus mapping -------------------
