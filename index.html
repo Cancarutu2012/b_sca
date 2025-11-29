@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vonalkód Olvasó és Dekóder</title>
+    <title>Pázmány-beléptető</title>
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <style>
@@ -32,19 +32,20 @@
 </head>
 <body>
 
-<h2>Vonalkód Olvasó és Dekóder</h2>
+<h2>BELÉPTETŐ RENDSZER</h2>
 
 <div id="qr-reader"></div>
 
 <div id="overlay">
     <div id="nameDisplay" style="display:none;"></div>
-    <div id="message" style="display:none;">MEHETSZ</div>
+    <div id="message" style="display:none;">KÉRLEK, MENJ TOVÁBB</div>
 </div>
 
 <div id="bottomSection">
     <table id="nameTable">
         <thead>
-            <tr><th>Beolvasott Nevek</th></tr>
+            <tr><th>Becsekkolt nevek listája - érkezési sorrend</th></tr>
+            <button id="sendButton" onclick="sendEmail()">LISTA KÜLDÉSEd</button>
         </thead>
         <tbody id="nameList"></tbody>
     </table>
@@ -165,6 +166,7 @@ startScanner();
 
 </body>
 </html>
+
 
 
 
